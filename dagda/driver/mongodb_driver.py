@@ -21,6 +21,7 @@ import pymongo
 import datetime
 import dateutil.parser
 from bson.objectid import ObjectId
+from log.dagda_logger import DagdaLogger
 
 
 class MongoDbDriver:
@@ -311,22 +312,26 @@ class MongoDbDriver:
                 if cve_temp not in included_cve:
                     info = {}
                     cve_info = {}
+                    pub_date = None
                     cve_data = self.db.cve_info.find_one({'cveid': cve_temp})
                     if cve_data is not None:
-                        # delte objectid and convert datetime to str
+                        # delete objectid and convert datetime to str
                         cve_info = cve_data.copy()
-                        if pub_date_from:
+                        DagdaLogger.get_logger().debug(cve_info)
+                        DagdaLogger.get_logger().debug(pub_date_from)
+                        if pub_date_from is not None:
                             try:
                                 pub_date = datetime.datetime.strptime(pub_date_from, '%d-%m-%Y')
-                                if cve_info['pub_date'] < pub_date:
-                                    continue
+                                DagdaLogger.get_logger().debug(pub_date)
+                                DagdaLogger.get_logger().debug(cve_info['pub_date'])
                             except:
                                 pass
                         cve_info['mod_date'] = cve_data['mod_date'].strftime('%d-%m-%Y')
                         cve_info['pub_date'] = cve_data['pub_date'].strftime('%d-%m-%Y')
                         del cve_info["_id"]
                     info[cve_temp] = cve_info
-                    output.append(info)
+                    if pub_date is not None and cve_info['pub_date'] >= pub_date:
+                        output.append(info)
                     included_cve.append(cve['cve_id'])
         included_bid = []
         for bid in bid_cursor:
