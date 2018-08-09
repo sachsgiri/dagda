@@ -21,6 +21,7 @@ import json
 import re
 import datetime
 from flask import Blueprint
+from flask import request
 from api.internal.internal_server import InternalServer
 
 
@@ -54,7 +55,11 @@ def get_init_or_update_db_status():
 @vuln_api.route('/v1/vuln/products/<string:product>', methods=['GET'])
 @vuln_api.route('/v1/vuln/products/<string:product>/<string:version>', methods=['GET'])
 def get_vulns_by_product_and_version(product, version=None):
-    vulns = InternalServer.get_mongodb_driver().get_vulnerabilities(product, version)
+    # Init
+    cve_from = request.args.get('after_pub_date')
+    if not cve_from:
+        event_from = None
+    vulns = InternalServer.get_mongodb_driver().get_vulnerabilities(product, version, cve_from)
     if len(vulns) == 0:
         return json.dumps({'err': 404, 'msg': 'Vulnerabilities not found'}, sort_keys=True), 404
     return json.dumps(vulns, sort_keys=True)

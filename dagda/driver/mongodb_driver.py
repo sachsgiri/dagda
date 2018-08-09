@@ -259,7 +259,7 @@ class MongoDbDriver:
         return events
 
     # Gets the product vulnerabilities
-    def get_vulnerabilities(self, product, version=None):
+    def get_vulnerabilities(self, product, version=None, pub_date_from=None):
         filt_prod = product.replace("-", " ").replace("_", " ")
         if not version:
             # Gets CVEs
@@ -315,6 +315,13 @@ class MongoDbDriver:
                     if cve_data is not None:
                         # delte objectid and convert datetime to str
                         cve_info = cve_data.copy()
+                        if pub_date_from:
+                            try:
+                                pub_date = datetime.datetime.strptime(pub_date_from, '%d-%m-%Y')
+                                if cve_info['pub_date'] < pub_date:
+                                    continue
+                            except:
+                                pass
                         cve_info['mod_date'] = cve_data['mod_date'].strftime('%d-%m-%Y')
                         cve_info['pub_date'] = cve_data['pub_date'].strftime('%d-%m-%Y')
                         del cve_info["_id"]

@@ -97,26 +97,3 @@ def check_docker_by_container_id(container_id):
     output['id'] = str(id)
     output['msg'] = 'Accepted the analysis of <' + image_name + '> with id: ' + container_id
     return json.dumps(output, sort_keys=True), 202
-
-# Check docker by name and version
-@check_api.route('/v1/check/package/<string:package_name>/<string:package_version>', methods=['POST'])
-@check_api.route('/v1/check/package/<string:package_name>', methods=['POST'])
-def check_package_by_name_version(package_name, package_version=None):
-    # -- Check input
-    if not package_name and not package_version:
-        return json.dumps({'err': 400, 'msg': 'Bad package_name '}, sort_keys=True), 400
-
-    # -- Process request
-    data = {}
-    data['package_name'] = package_name
-    if package_version:
-        data['package_version'] = package_version
-    data['timestamp'] = datetime.datetime.now().timestamp()
-    data['status'] = 'Analyzing'
-    id = InternalServer.get_mongodb_driver().insert_docker_image_scan_result_to_history(data)
-    InternalServer.get_dagda_edn().put({'msg': 'check_package', 'package_name': package_name, 'package_version': package_version,'_id': str(id)})
-    # -- Return
-    output = {}
-    output['id'] = str(id)
-    output['msg'] = 'Accepted the analysis of <' + package_name + '> with version: ' + (package_version if package_version else '')
-    return json.dumps(output, sort_keys=True), 202
