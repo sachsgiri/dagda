@@ -114,7 +114,6 @@ def check_package_by_name_version(package_name, package_version):
     data['status'] = 'Analyzing'
     id = InternalServer.get_mongodb_driver().insert_docker_image_scan_result_to_history(data)
     InternalServer.get_dagda_edn().put({'msg': 'check_package', 'package_name': package_name, 'package_version': package_version,'_id': str(id)})
-
     # -- Return
     output = {}
     output['id'] = str(id)

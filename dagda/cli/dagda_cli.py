@@ -106,6 +106,7 @@ def execute_dagda_cmd(cmd, args):
                 pkg_name = args.get_package_name()
                 if args.get_package_version():
                     pkg_name = "{}/{}".format(pkg_name, args.get_package_version())
+                DagdaLogger.get_logger().debug(pkg_name)
                 r = requests.post(dagda_base_url + '/check/package/' + pkg_name)
             elif args.get_docker_image_name():
                 r = requests.post(dagda_base_url + '/check/images/' + args.get_docker_image_name())
