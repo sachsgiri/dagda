@@ -330,7 +330,7 @@ class MongoDbDriver:
                         cve_info['pub_date'] = cve_data['pub_date'].strftime('%d-%m-%Y')
                         del cve_info["_id"]
                     info[cve_temp] = cve_info
-                    if pub_date is not None and cve_info['pub_date'] >= pub_date:
+                    if pub_date is not None and cve_data['pub_date'] >= pub_date:
                         output.append(info)
                     included_cve.append(cve['cve_id'])
         included_bid = []
