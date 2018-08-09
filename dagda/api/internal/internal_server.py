@@ -32,7 +32,7 @@ class InternalServer:
     _mongodb_driver = MongoDbDriver()
     _docker_driver = DockerDriver()
     _external_falco = False
-    _debug_logging = False
+    _debug_logging = True
 
     # -- Static methods
 
