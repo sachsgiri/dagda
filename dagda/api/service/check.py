@@ -118,5 +118,5 @@ def check_package_by_name_version(package_name, package_version=None):
     # -- Return
     output = {}
     output['id'] = str(id)
-    output['msg'] = 'Accepted the analysis of <' + package_name + '> with version: ' + package_version
+    output['msg'] = 'Accepted the analysis of <' + package_name + '> with version: ' + (package_version if package_version else '')
     return json.dumps(output, sort_keys=True), 202
