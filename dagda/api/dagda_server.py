@@ -182,3 +182,14 @@ class DagdaServer:
         # -- Updates mongodb report
         InternalServer.get_mongodb_driver().update_docker_image_scan_result_to_history(item['_id'],
                                                                                        evaluated_docker_image)
+
+    # Check docker by container id
+    @staticmethod
+    def _check_package_by_package_name_version(item):
+        analyzer = Analyzer()
+        # -- Evaluates the docker image
+        evaluated_docker_image = analyzer.evaluate_image(None, item['container_id'])
+
+        # -- Updates mongodb report
+        InternalServer.get_mongodb_driver().update_docker_image_scan_result_to_history(item['_id'],
+                                                                                       evaluated_docker_image)

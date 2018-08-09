@@ -48,84 +48,89 @@ class Analyzer:
         self.dockerDriver = InternalServer.get_docker_driver()
 
     # Evaluate image from image name or container id
-    def evaluate_image(self, image_name, container_id):
+    def evaluate_image(self, image_name, container_id, package_name=None, package_version=None):
         if InternalServer.is_debug_logging_enabled():
             DagdaLogger.get_logger().debug('ENTRY to the method for analyzing a docker image')
 
         # Init
         data = {}
-
-        # -- Static analysis
-        image_name = self.dockerDriver.get_docker_image_name_by_container_id(container_id) if container_id \
+        if container_id or image_name:
+            # -- Static analysis
+            image_name = self.dockerDriver.get_docker_image_name_by_container_id(container_id) if container_id \
                                                                                            else image_name
-        os_packages = []
-        malware_binaries = []
-        dependencies = None
-        temp_dir = None
-        try:
-            # Get OS packages
+        if image_name:
+            os_packages = []
+            malware_binaries = []
+            dependencies = None
+            temp_dir = None
+            try:
+                # Get OS packages
+                if InternalServer.is_debug_logging_enabled():
+                    DagdaLogger.get_logger().debug('Retrieving OS packages from the docker image ...')
+
+                if container_id is None:  # Scans the docker image
+                    os_packages = os_info_extractor.get_soft_from_docker_image(docker_driver=self.dockerDriver,
+                                                                               image_name=image_name)
+                    temp_dir = extract_filesystem_bundle(docker_driver=self.dockerDriver,
+                                                         image_name=image_name)
+                else:  # Scans the docker container
+                    os_packages = os_info_extractor.get_soft_from_docker_container_id(docker_driver=self.dockerDriver,
+                                                                                      container_id=container_id)
+                    temp_dir = extract_filesystem_bundle(docker_driver=self.dockerDriver,
+                                                         container_id=container_id)
+
+                if InternalServer.is_debug_logging_enabled():
+                    DagdaLogger.get_logger().debug('OS packages from the docker image retrieved')
+
+                # Get malware binaries
+                if InternalServer.is_debug_logging_enabled():
+                    DagdaLogger.get_logger().debug('Retrieving malware files from the docker image ...')
+
+                malware_binaries = malware_extractor.get_malware_included_in_docker_image(docker_driver=self.dockerDriver,
+                                                                                          temp_dir=temp_dir)
+
+                if InternalServer.is_debug_logging_enabled():
+                    DagdaLogger.get_logger().debug('Malware files from the docker image retrieved')
+
+                # Get programming language dependencies
+                if InternalServer.is_debug_logging_enabled():
+                    DagdaLogger.get_logger().debug('Retrieving dependencies from the docker image ...')
+
+                dependencies = dep_info_extractor.get_dependencies_from_docker_image(docker_driver=self.dockerDriver,
+                                                                                     image_name=image_name,
+                                                                                     temp_dir=temp_dir)
+
+                if InternalServer.is_debug_logging_enabled():
+                    DagdaLogger.get_logger().debug('Dependencies from the docker image retrieved')
+
+            except Exception as ex:
+                message = "Unexpected exception of type {0} occured: {1!r}"\
+                    .format(type(ex).__name__,  ex.get_message() if type(ex).__name__ == 'DagdaError' else ex.args)
+                DagdaLogger.get_logger().error(message)
+                if InternalServer.is_debug_logging_enabled():
+                    traceback.print_exc()
+                data['status'] = message
+
+            # -- Cleanup
+            if temp_dir is not None:
+                clean_up(temporary_dir=temp_dir)
+
+            # -- Prepare output
             if InternalServer.is_debug_logging_enabled():
-                DagdaLogger.get_logger().debug('Retrieving OS packages from the docker image ...')
+                DagdaLogger.get_logger().debug('Preparing analysis output ...')
 
-            if container_id is None:  # Scans the docker image
-                os_packages = os_info_extractor.get_soft_from_docker_image(docker_driver=self.dockerDriver,
-                                                                           image_name=image_name)
-                temp_dir = extract_filesystem_bundle(docker_driver=self.dockerDriver,
-                                                     image_name=image_name)
-            else:  # Scans the docker container
-                os_packages = os_info_extractor.get_soft_from_docker_container_id(docker_driver=self.dockerDriver,
-                                                                                  container_id=container_id)
-                temp_dir = extract_filesystem_bundle(docker_driver=self.dockerDriver,
-                                                     container_id=container_id)
+            if dependencies is not None:
+                data['status'] = 'Completed'
+            else:
+                dependencies = []
 
-            if InternalServer.is_debug_logging_enabled():
-                DagdaLogger.get_logger().debug('OS packages from the docker image retrieved')
-
-            # Get malware binaries
-            if InternalServer.is_debug_logging_enabled():
-                DagdaLogger.get_logger().debug('Retrieving malware files from the docker image ...')
-
-            malware_binaries = malware_extractor.get_malware_included_in_docker_image(docker_driver=self.dockerDriver,
-                                                                                      temp_dir=temp_dir)
-
-            if InternalServer.is_debug_logging_enabled():
-                DagdaLogger.get_logger().debug('Malware files from the docker image retrieved')
-
-            # Get programming language dependencies
-            if InternalServer.is_debug_logging_enabled():
-                DagdaLogger.get_logger().debug('Retrieving dependencies from the docker image ...')
-
-            dependencies = dep_info_extractor.get_dependencies_from_docker_image(docker_driver=self.dockerDriver,
-                                                                                 image_name=image_name,
-                                                                                 temp_dir=temp_dir)
-
-            if InternalServer.is_debug_logging_enabled():
-                DagdaLogger.get_logger().debug('Dependencies from the docker image retrieved')
-
-        except Exception as ex:
-            message = "Unexpected exception of type {0} occured: {1!r}"\
-                .format(type(ex).__name__,  ex.get_message() if type(ex).__name__ == 'DagdaError' else ex.args)
-            DagdaLogger.get_logger().error(message)
-            if InternalServer.is_debug_logging_enabled():
-                traceback.print_exc()
-            data['status'] = message
-
-        # -- Cleanup
-        if temp_dir is not None:
-            clean_up(temporary_dir=temp_dir)
-
-        # -- Prepare output
-        if InternalServer.is_debug_logging_enabled():
-            DagdaLogger.get_logger().debug('Preparing analysis output ...')
-
-        if dependencies is not None:
+            data['image_name'] = image_name
+            data['timestamp'] = datetime.datetime.now().timestamp()
+            data['static_analysis'] = self.generate_static_analysis(image_name, os_packages, dependencies, malware_binaries)
+        elif package_name:
             data['status'] = 'Completed'
-        else:
-            dependencies = []
-
-        data['image_name'] = image_name
-        data['timestamp'] = datetime.datetime.now().timestamp()
-        data['static_analysis'] = self.generate_static_analysis(image_name, os_packages, dependencies, malware_binaries)
+            data['timestamp'] = datetime.datetime.now().timestamp()
+            data['vulnerabilities'] = self.get_vulnerabilities(package_name, package_version)
 
         if InternalServer.is_debug_logging_enabled():
             DagdaLogger.get_logger().debug('Analysis output completed')

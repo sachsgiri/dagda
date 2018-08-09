@@ -31,6 +31,8 @@ class CheckCLIParser:
         self.parser = DagdaCheckParser(prog='dagda.py check', usage=check_parser_text)
         self.parser.add_argument('-i', '--docker_image', type=str)
         self.parser.add_argument('-c', '--container_id', type=str)
+        self.parser.add_argument('-p', '--package', type=str)
+        self.parser.add_argument('-v', '--version', type=str)
         self.args, self.unknown = self.parser.parse_known_args()
         # Verify command line arguments
         status = self.verify_args(self.args)
@@ -47,12 +49,18 @@ class CheckCLIParser:
     def get_container_id(self):
         return self.args.container_id
 
+    def get_package_version(self):
+        return self.args.version
+
+    def get_package_name(self):
+        return self.args.package
+
     # -- Static methods
 
     # Verify command line arguments
     @staticmethod
     def verify_args(args):
-        if not args.container_id and not args.docker_image:
+        if not args.container_id and not args.docker_image and not args.version and not args.package:
             DagdaLogger.get_logger().error('Missing arguments.')
             return 1
         elif args.container_id and args.docker_image:
@@ -89,4 +97,8 @@ Optional Arguments:
                         the input docker image name
   -c CONTAINER_ID, --container_id CONTAINER_ID
                         the input docker container id
+  -p package, --package PACKAGE_NAME
+                        the input package name
+  -v version, --version PACAKGE_VERSION
+                        the input package version
 '''
