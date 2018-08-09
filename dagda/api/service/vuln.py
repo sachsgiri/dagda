@@ -58,7 +58,7 @@ def get_vulns_by_product_and_version(product, version=None):
     # Init
     cve_from = request.args.get('after_pub_date')
     if not cve_from:
-        event_from = None
+        cve_from = None
     vulns = InternalServer.get_mongodb_driver().get_vulnerabilities(product, version, cve_from)
     if len(vulns) == 0:
         return json.dumps({'err': 404, 'msg': 'Vulnerabilities not found'}, sort_keys=True), 404
