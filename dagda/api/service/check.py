@@ -122,7 +122,7 @@ def check_package_by_name_version(package_name, package_version):
 
 # Check docker by name and version
 @check_api.route('/v1/check/package/<string:package_name>', methods=['POST'])
-def check_package_by_name_version(package_name):
+def check_package_by_name(package_name):
     # -- Check input
     if not package_name:
         return json.dumps({'err': 400, 'msg': 'Bad package_name '}, sort_keys=True), 400
