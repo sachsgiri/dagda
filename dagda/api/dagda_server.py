@@ -81,6 +81,7 @@ class DagdaServer:
                     elif item['msg'] == 'check_container':
                         self._check_docker_by_container_id(item)
                     elif item['msg'] == 'check_package':
+                        DagdaLogger.get_logger().debug('checking package name')
                         self._check_package_by_package_name_version(item)
             except KeyboardInterrupt:
                 # Pressed CTRL+C to quit, so nothing to do
@@ -191,6 +192,7 @@ class DagdaServer:
         analyzer = Analyzer()
         # -- Evaluates the docker image
         evaluated_docker_image = analyzer.evaluate_image(None, None, item['package_name'], item['package_version'])
+        DagdaLogger.get_logger().debug(evaluated_docker_image)
 
         # -- Updates mongodb report
         InternalServer.get_mongodb_driver().update_docker_image_scan_result_to_history(item['_id'],
