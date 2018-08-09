@@ -100,7 +100,8 @@ def check_docker_by_container_id(container_id):
 
 # Check docker by name and version
 @check_api.route('/v1/check/package/<string:package_name>/<string:package_version>', methods=['POST'])
-def check_package_by_name_version(package_name, package_version):
+@check_api.route('/v1/check/package/<string:package_name>', methods=['POST'])
+def check_package_by_name_version(package_name, package_version=None):
     # -- Check input
     if not package_name and not package_version:
         return json.dumps({'err': 400, 'msg': 'Bad package_name '}, sort_keys=True), 400
@@ -118,25 +119,4 @@ def check_package_by_name_version(package_name, package_version):
     output = {}
     output['id'] = str(id)
     output['msg'] = 'Accepted the analysis of <' + package_name + '> with version: ' + package_version
-    return json.dumps(output, sort_keys=True), 202
-
-# Check docker by name and version
-@check_api.route('/v1/check/package/<string:package_name>', methods=['POST'])
-def check_package_by_name(package_name):
-    # -- Check input
-    if not package_name:
-        return json.dumps({'err': 400, 'msg': 'Bad package_name '}, sort_keys=True), 400
-    DagdaLogger.get_logger().debug("revieved package name {}".format(package_name))
-
-    # -- Process request
-    data = {}
-    data['package_name'] = package_name
-    data['timestamp'] = datetime.datetime.now().timestamp()
-    data['status'] = 'Analyzing'
-    id = InternalServer.get_mongodb_driver().insert_docker_image_scan_result_to_history(data)
-    InternalServer.get_dagda_edn().put({'msg': 'check_package', 'package_name': package_name, '_id': str(id)})
-    # -- Return
-    output = {}
-    output['id'] = str(id)
-    output['msg'] = 'Accepted the analysis of <' + package_name
     return json.dumps(output, sort_keys=True), 202
