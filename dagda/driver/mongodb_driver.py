@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-
+import dateutil.parser
 import pymongo
 import datetime
 import dateutil.parser
@@ -55,10 +55,10 @@ class MongoDbDriver:
             data['product'] = splitted_product[2]
             data['version'] = splitted_product[3]
             data['year'] = int(splitted_product[4])
-            aux = str(splitted_product[5]).split("-")
-            pub_date = datetime.datetime(int(aux[0]), int(aux[1]), int(aux[2]))
-            aux = str(splitted_product[6]).split("-")
-            mod_date = datetime.datetime(int(aux[0]), int(aux[1]), int(aux[2]))
+            aux = str(splitted_product[5]).strip()
+            pub_date = dateutil.parser.parse(aux)
+            aux = str(splitted_product[6]).strip()
+            mod_date = dateutil.parser.parse(aux)
             data['pub_date'] = pub_date
             data['mod_date'] = mod_date
             products.append(data)
