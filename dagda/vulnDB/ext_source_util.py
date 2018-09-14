@@ -226,8 +226,17 @@ def get_bug_traqs_lists_from_online_mode(bid_list):
 
 # Parses BID from json data
 def parse_bid_from_json(json_data, items):
+    mod_date = None
+    pub_date = None
     bugtraq_id = json_data['bugtraq_id']
     vuln_products = json_data['vuln_products']
+    if 'mod_date' in json_data:
+        mod_date = json_data['mod_date']
+        mod_date = str(mod_date).strip()
+    if 'pub_date' in json_data:
+        pub_date = json_data['pub_date']
+        pub_date = str(pub_date).strip()
+
     for vuln_product in vuln_products:
         matchObj = re.search("[\s\-]([0-9]+(\.[0-9]+)*)", vuln_product)
         if matchObj:
@@ -238,6 +247,10 @@ def parse_bid_from_json(json_data, items):
             if version:
                 product = vuln_product[:vuln_product.index(version) - 1].rstrip().lstrip()
                 item = str(bugtraq_id) + "#" + product.lower() + "#" + str(version)
+                if mod_date is not None:
+                    item += ("#" + mod_date)
+                if pub_date is not None:
+                    item += ("#" + pub_date)
                 if item not in items:
                     items.add(item)
 

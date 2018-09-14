@@ -22,6 +22,9 @@ import datetime
 import dateutil.parser
 from bson.objectid import ObjectId
 from log.dagda_logger import DagdaLogger
+from datetime import datetime
+from datetime import timezone;
+
 
 
 class MongoDbDriver:
@@ -84,6 +87,15 @@ class MongoDbDriver:
             data['bugtraq_id'] = int(splitted_product[0])
             data['product'] = splitted_product[1]
             data['version'] = splitted_product[2]
+            if len(splitted_product) > 3:
+                mod_date = splitted_product[3]
+                pub_date = splitted_product[4]
+                mod_date = datetime.strptime(mod_date, '%b %d %Y %I:%M%p')
+                mod_date = mod_date.replace(tzinfo=timezone.utc)
+                pub_date = datetime.strptime(pub_date, '%b %d %Y %I:%M%p')
+                pub_date = pub_date.replace(tzinfo=timezone.utc)
+                data['mod_date'] = mod_date
+                data['pub_date'] = pub_date
             products.append(data)
         # Bulk insert
         self.db.bid.create_index([('product', 'text')], default_language='none')

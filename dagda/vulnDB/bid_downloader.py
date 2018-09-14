@@ -68,7 +68,7 @@ def get_vulnerable_products(body):
 
 
 # Prepares output
-def prepare_output(title, bugtraq_id, clazz, linked_cves, is_local, is_remote, vuln_products):
+def prepare_output(title, bugtraq_id, clazz, linked_cves, is_local, is_remote, vuln_products, pub_date=None, mod_date=None):
     data = {}
     data['title'] = title
     data['bugtraq_id'] = bugtraq_id
@@ -77,6 +77,10 @@ def prepare_output(title, bugtraq_id, clazz, linked_cves, is_local, is_remote, v
     data['local'] = is_local.lower()
     data['remote'] = is_remote.lower()
     data['vuln_products'] = vuln_products
+    if pub_date is not None:
+        data['pub_date'] = pub_date
+    if mod_date is not None:
+        data['mod_date'] = mod_date
     return data
 
 
@@ -95,12 +99,14 @@ def get_bid(bugtraq_id):
                 linked_cves = get_linked_CVEs(body)
                 is_local = get_info_by_label(body, 'Local')
                 is_remote = get_info_by_label(body, 'Remote')
+                pub_date = get_info_by_label(body, 'Published')
+                mod_date = get_info_by_label(body, 'Updated')
                 vuln_products = get_vulnerable_products(body)
             except:
                 vuln_products = []
             if len(vuln_products) > 0:
                 return json.dumps(prepare_output(title, bugtraq_id, clazz, linked_cves, is_local, is_remote,
-                                                 vuln_products), sort_keys=True)
+                                                 vuln_products, pub_date, mod_date), sort_keys=True)
     except requests.ConnectionError:
         DagdaLogger.get_logger().warning('Connection error occurred with: "' + url + '"')
         return None
