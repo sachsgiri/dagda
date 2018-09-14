@@ -104,6 +104,7 @@ def get_bid(bugtraq_id):
                 vuln_products = get_vulnerable_products(body)
             except:
                 vuln_products = []
+                DagdaLogger.get_logger().exception('some exception')
             if len(vuln_products) > 0:
                 return json.dumps(prepare_output(title, bugtraq_id, clazz, linked_cves, is_local, is_remote,
                                                  vuln_products, pub_date, mod_date), sort_keys=True)
