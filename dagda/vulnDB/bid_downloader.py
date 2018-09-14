@@ -101,6 +101,8 @@ def get_bid(bugtraq_id):
                 is_remote = get_info_by_label(body, 'Remote')
                 pub_date = get_info_by_label(body, 'Published')
                 mod_date = get_info_by_label(body, 'Updated')
+                DagdaLogger.get_logger().error('Pub Date = ' + pub_date)
+                DagdaLogger.get_logger().error('Pub Date = ' + mod_date)
                 vuln_products = get_vulnerable_products(body)
             except:
                 vuln_products = []

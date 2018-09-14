@@ -248,9 +248,9 @@ def parse_bid_from_json(json_data, items):
                 product = vuln_product[:vuln_product.index(version) - 1].rstrip().lstrip()
                 item = str(bugtraq_id) + "#" + product.lower() + "#" + str(version)
                 if mod_date is not None:
-                    item += ("#" + mod_date)
+                    item += ("#M" + mod_date)
                 if pub_date is not None:
-                    item += ("#" + pub_date)
+                    item += ("#P" + pub_date)
                 if item not in items:
                     items.add(item)
 
